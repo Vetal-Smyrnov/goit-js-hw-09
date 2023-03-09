@@ -1,48 +1,48 @@
 import Notiflix from 'notiflix';
 
-document.querySelector('.form').addEventListener('submit', onSubmit);
+const refs = {
+  formEl: document.querySelector('.form'),
+};
 
-function onSubmit(e) {
-  e.preventDefault();
-  const { amount, delay, step } = e.currentTarget.elements;
-  createPromises(+amount.value, +delay.value, +step.value);
-}
+refs.formEl.addEventListener('submit', onInputData);
 
-function createPromises(amount, delay, step) {
-  for (
-    let currentPosition = 0, currentDelay = delay;
-    currentPosition < amount;
-    currentPosition++, currentDelay += step
+function onInputData(event) {
+  event.preventDefault();
+
+  let delay = +event.target.elements.delay.value;
+  const step = +event.target.elements.step.value;
+  const amount = +event.target.elements.amount.value;
+
+  if (
+    !event.target.elements.delay.value ||
+    !event.target.elements.step.value ||
+    !event.target.elements.amount.value
   ) {
-    createPromise(currentPosition, currentDelay)
+    Notiflix.Notify.failure('Please fill all fields');
+    return;
+  }
+
+  for (let i = 1; i <= amount; i += 1) {
+    createPromise(i, delay)
       .then(({ position, delay }) => {
-        Notiflix.Notify.success(
-          `✅ Fulfilled promise ${position} in ${delay}ms`
-        );
+        Notiflix.Notify.success(`Fulfilled promise ${position} in ${delay}ms`);
       })
       .catch(({ position, delay }) => {
-        Notiflix.Notify.failure(
-          `❌ Rejected promise ${position} in ${delay}ms`
-        );
+        Notiflix.Notify.failure(`Rejected promise ${position} in ${delay}ms`);
       });
+    delay += step;
   }
 }
 
 function createPromise(position, delay) {
+  const shouldResolve = Math.random() > 0.3;
+
   return new Promise((resolve, reject) => {
-    const shouldResolve = Math.random() > 0.3;
     setTimeout(() => {
       if (shouldResolve) {
-        resolve({
-          position,
-          delay,
-        });
-      } else {
-        reject({
-          position,
-          delay,
-        });
+        resolve({ position, delay });
       }
+      reject({ position, delay });
     }, delay);
   });
 }

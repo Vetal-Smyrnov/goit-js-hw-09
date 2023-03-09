@@ -1,101 +1,100 @@
-// Описаний в документації
 import flatpickr from 'flatpickr';
 import Notiflix from 'notiflix';
-// Додатковий імпорт стилів
 import 'flatpickr/dist/flatpickr.min.css';
 
-// Get DOM elements
-
-const scoreboardEl = {
-  days: document.querySelector('[data-days]'),
-  hours: document.querySelector('[data-hours]'),
-  minutes: document.querySelector('[data-minutes]'),
-  seconds: document.querySelector('[data-seconds]'),
+const refs = {
+  chooseDate: document.querySelector('input#datetime-picker'),
+  startCounterBtn: document.querySelector('button[data-start]'),
+  days: document.querySelector('span[data-days]'),
+  hours: document.querySelector('span[data-hours]'),
+  minutes: document.querySelector('span[data-minutes]'),
+  seconds: document.querySelector('span[data-seconds]'),
 };
-const startButtonEl = document.querySelector('[data-start]');
 
-startButtonEl.addEventListener('click', onStartButtonClick);
-
-let chosenDate = null;
-let intervalID = null;
-
-startButtonEl.disabled = true;
-Notiflix.Notify.init({
-  clickToClose: true,
-});
+let selectDate;
+refs.startCounterBtn.disabled = true;
+refs.startCounterBtn.style.cursor = 'pointer';
 
 const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
-  onClose(selectedDates) {
-    [chosenDate] = selectedDates;
-    if (chosenDate < options.defaultDate) {
+  onClose([selectedDates]) {
+    if (selectedDates <= Date.now()) {
       Notiflix.Notify.failure('Please choose a date in the future');
-      fullCounterReset();
     } else {
-      startButtonEl.disabled = false;
+      refs.startCounterBtn.disabled = false;
+      selectDate = selectedDates;
     }
   },
 };
-
-flatpickr('input#datetime-picker', options);
-
-function onStartButtonClick() {
-  startButtonEl.disabled = true;
-  intervalID = setInterval(() => {
-    intervalFunc();
-  }, 1000);
-}
-
-// Function for calculating and refreshing remaining time
-
-function fullCounterReset() {
-  if (intervalID) {
-    clearInterval(intervalID);
-    intervalID = null;
+class Timer {
+  constructor({ onTick }) {
+    this.intervalId = null;
+    this.isActive = false;
+    this.onTick = onTick;
   }
-  startButtonEl.disabled = true;
-  castToScreen(convertMs(0));
+
+  start() {
+    if (this.isActive) {
+      return;
+    }
+
+    this.isActive = true;
+
+    this.intervalId = setInterval(() => {
+      const deltaTime = selectDate - Date.now();
+      const timeCounter = this.convertMs(deltaTime);
+
+      this.onTick(timeCounter);
+
+      if (deltaTime <= 999) {
+        Notiflix.Notify.success('The countdown is over!');
+        clearInterval(this.intervalId);
+        this.isActive = false;
+        const timeCounter = this.convertMs(deltaTime);
+        this.onTick(timeCounter);
+      }
+    }, 1000);
+  }
+
+  convertMs(ms) {
+    // Number of milliseconds per unit of time
+    const second = 1000;
+    const minute = second * 60;
+    const hour = minute * 60;
+    const day = hour * 24;
+
+    // Remaining days
+    const days = Math.floor(ms / day);
+    // Remaining hours
+    const hours = Math.floor((ms % day) / hour);
+    // Remaining minutes
+    const minutes = Math.floor(((ms % day) % hour) / minute);
+    // Remaining seconds
+    const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+
+    return { days, hours, minutes, seconds };
+  }
 }
 
-function intervalFunc() {
-  let delta = chosenDate - new Date();
-  if (delta < 0) {
-    fullCounterReset();
-  } else castToScreen(convertMs(delta));
+const timer = new Timer({
+  onTick: updateCounter,
+});
+
+refs.startCounterBtn.addEventListener('click', timer.start.bind(timer));
+
+flatpickr(refs.chooseDate, options);
+
+function updateCounter({ days, hours, minutes, seconds }) {
+  refs.days.textContent = `${addLeadingZero(days)}`;
+  refs.hours.textContent = `${addLeadingZero(hours)}`;
+  refs.minutes.textContent = `${addLeadingZero(minutes)}`;
+  refs.seconds.textContent = `${addLeadingZero(seconds)}`;
+  refs.startCounterBtn.setAttribute('disabled', true);
 }
 
-function convertMs(ms) {
-  // Number of milliseconds per unit of time
-  const second = 1000;
-  const minute = second * 60;
-  const hour = minute * 60;
-  const day = hour * 24;
-
-  // Remaining days
-  const days = Math.floor(ms / day);
-  // Remaining hours
-  const hours = Math.floor((ms % day) / hour);
-  // Remaining minutes
-  const minutes = Math.floor(((ms % day) % hour) / minute);
-  // Remaining seconds
-  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
-  return { days, hours, minutes, seconds };
-}
-
-// Add leading zeros to digits for time
-
-function addLeadingZero(number) {
-  return number.toString().padStart(2, '0');
-}
-
-// Show remaining time on screen
-
-function castToScreen(data) {
-  scoreboardEl.days.textContent = addLeadingZero(data.days);
-  scoreboardEl.hours.textContent = addLeadingZero(data.hours);
-  scoreboardEl.minutes.textContent = addLeadingZero(data.minutes);
-  scoreboardEl.seconds.textContent = addLeadingZero(data.seconds);
+function addLeadingZero(value) {
+  return String(value).padStart(2, '0');
 }
