@@ -7,9 +7,9 @@ body {
     Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #c7d8ff;
+  background-color: rgb(0, 255, 187);
   color: #212121;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 img {
@@ -21,23 +21,23 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 48px;
-  margin-top: 48px;
+  gap: 55px;
+  margin-top: 30px;
 }
 
 .field {
   position: relative;
   text-align: center;
-  background-color: #fafafa;
-  box-shadow: 3px 3px 2px 1px rgba(0, 0, 0, 0.25);
-  padding: 12px;
-  border-radius: 8px;
+  background-color: red;
+  padding: 20px;
+  border-radius: 25px;
+  box-shadow: -3px -3px 1px 1px rgba(124, 113, 168, 0.2);
 }
 
 .field:not(:last-child)::after {
   content: ':';
   position: absolute;
-  font-size: 48px;
+  font-size: 55px;
   right: -30px;
   top: 40px;
 }
@@ -52,5 +52,16 @@ span {
 }
 
 .label {
-  font-size: 24px;
+  font-size: 20px;
+}
+
+.button {
+  color: red;
+  background-color: #fff;
+  box-shadow: 1px 1px 1px 1px rgba(22, 22, 23, 0.2);
+}
+
+.flatpickr-input {
+  text-align: center;
+  box-shadow: 1px 1px 1px 1px rgba(22, 22, 23, 0.2);
 }
